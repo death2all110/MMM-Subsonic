@@ -1,0 +1,40 @@
+.subsonic-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  text-align: left;
+}
+
+.subsonic-wrapper.nothing-playing {
+  justify-content: center;
+  opacity: 0.5;
+}
+
+.subsonic-wrapper .cover-wrapper {
+  flex-shrink: 0;
+}
+
+.subsonic-wrapper .cover-img {
+  width: 80px;
+  height: 80px;
+  border-radius: 8px;
+  object-fit: cover;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+}
+
+.subsonic-wrapper .details-wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.subsonic-wrapper .track-title {
+  font-weight: bold;
+  line-height: 1.2;
+  margin-bottom: 4px;
+}
+
+.subsonic-wrapper .track-artist {
+  color: #bbb;
+  line-height: 1.2;
+}
