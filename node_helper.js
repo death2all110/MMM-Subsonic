@@ -22,7 +22,7 @@ module.exports = NodeHelper.create({
     const currentPriority = levels[configLevel] !== undefined ? levels[configLevel] : 2;
 
     if (targetPriority >= currentPriority) {
-      const prefix = `[MMM-Navidrome] [${level.toUpperCase()}]`;
+      const prefix = `[MMM-Subsonic] [${level.toUpperCase()}]`;
       if (level === "error") {
         console.error(prefix, message, detail);
       } else if (level === "warn") {
