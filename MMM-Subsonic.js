@@ -42,19 +42,25 @@ Module.register("MMM-Subsonic", {
     }
   },
 
-  ssocketNotificationReceived: function(notification, payload) {
+  socketNotificationReceived: function(notification, payload) {
     if (notification === "NOW_PLAYING_DATA") {
-      this.trackData = payload;
-      this.error = null;
-      
-      // Sync the local UI timer with the server's reported position.
-      // We push the "songStartTime" backwards in time by the elapsed seconds
-      // so the 1-second interval loop ticks smoothly from the correct spot.
-      this.elapsedSeconds = payload.position || 0;
-      this.songStartTime = Date.now() - (this.elapsedSeconds * 1000);
+      // DEBUG LOG: This will let you expand the raw track data in your browser dev tools
+      console.log("[MMM-Subsonic] Received payload:", payload);
 
+      if (payload) {
+        this.trackData = payload;
+        this.error = null;
+        
+        // Sync the local UI timer with the server's reported position
+        this.elapsedSeconds = payload.position || 0;
+        this.songStartTime = Date.now() - (this.elapsedSeconds * 1000);
+      } else {
+        // If payload is null, it means the backend connected successfully but nothing is playing
+        this.trackData = null;
+      }
       this.updateDom();
     } else if (notification === "NOW_PLAYING_ERROR") {
+      console.error("[MMM-Subsonic] Backend error:", payload);
       this.error = payload;
       this.updateDom();
     }
