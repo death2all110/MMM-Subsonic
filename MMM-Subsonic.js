@@ -54,71 +54,58 @@ Module.register("MMM-Subsonic", {
     const wrapper = document.createElement("div");
 
     if (this.error) {
-      wrapper.className = "subsonic-wrapper nothing-playing dimmed small";
+      wrapper.className = "subsonic-card nothing-playing dimmed small";
       wrapper.innerHTML = "Subsonic Error: " + this.error;
       return wrapper;
     }
 
     if (!this.trackData) {
-      wrapper.className = "subsonic-wrapper nothing-playing dimmed small";
+      wrapper.className = "subsonic-card nothing-playing dimmed small";
       wrapper.innerHTML = "Nothing playing";
       return wrapper;
     }
 
-    wrapper.className = "subsonic-wrapper";
+    wrapper.className = "subsonic-card";
 
-    // Cover Art
-    const coverWrapper = document.createElement("div");
-    coverWrapper.className = "cover-wrapper";
-    const coverImg = document.createElement("img");
-    coverImg.src = this.trackData.coverArt;
-    coverImg.className = "cover-img";
-    coverWrapper.appendChild(coverImg);
-    wrapper.appendChild(coverWrapper);
+    // --- Top Section: Header ---
+    const headerWrapper = document.createElement("div");
+    headerWrapper.className = "header-wrapper";
 
-    // Track Details
-    const detailsWrapper = document.createElement("div");
-    detailsWrapper.className = "details-wrapper";
+    // Text Info (Green line, Title, Artist)
+    const infoWrapper = document.createElement("div");
+    infoWrapper.className = "info-wrapper";
 
     const title = document.createElement("div");
-    title.className = "track-title bright medium";
-    // Inject a star if the track is favorited
-    if (this.trackData.isStarred) {
-      const starIcon = document.createElement("i");
-      starIcon.className = "fas fa-heart"; // You can change this to "fas fa-heart" if you prefer
-      starIcon.style.marginRight = "8px";
-      starIcon.style.color = "pink"; // Optional: gives it a golden color
-      title.appendChild(starIcon);
-    }
-
-    // Append the actual track title
-    const titleText = document.createTextNode(this.trackData.title);
-    title.appendChild(titleText);
-    detailsWrapper.appendChild(title);
+    title.className = "track-title bright";
+    title.innerHTML = this.trackData.title;
+    infoWrapper.appendChild(title);
 
     const artist = document.createElement("div");
     artist.className = "track-artist normal small";
     artist.innerHTML = this.trackData.artist;
-    detailsWrapper.appendChild(artist);
+    infoWrapper.appendChild(artist);
 
-    if (this.trackData.duration) {
-      const durationDiv = document.createElement("div");
-      durationDiv.className = "track-duration dimmed xsmall";
-      durationDiv.style.marginTop = "4px";
-      
-      // Adds a small FontAwesome clock icon next to the time
-      const clockIcon = document.createElement("i");
-      clockIcon.className = "far fa-clock";
-      clockIcon.style.marginRight = "6px";
-      
-      const timeText = document.createTextNode(this.formatTime(this.trackData.duration));
-      
-      durationDiv.appendChild(clockIcon);
-      durationDiv.appendChild(timeText);
-      detailsWrapper.appendChild(durationDiv);
+    headerWrapper.appendChild(infoWrapper);
+
+    // Favorites Icon (Heart on the right)
+    if (this.trackData.isStarred) {
+      const heartIcon = document.createElement("i");
+      heartIcon.className = "fas fa-heart favorite-icon"; 
+      headerWrapper.appendChild(heartIcon);
     }
+
+    wrapper.appendChild(headerWrapper);
+
+    // --- Bottom Section: Cover Art ---
+    const coverWrapper = document.createElement("div");
+    coverWrapper.className = "cover-wrapper";
     
-    wrapper.appendChild(detailsWrapper);
+    const coverImg = document.createElement("img");
+    coverImg.src = this.trackData.coverArt;
+    coverImg.className = "cover-img";
+    
+    coverWrapper.appendChild(coverImg);
+    wrapper.appendChild(coverWrapper);
 
     return wrapper;
   }

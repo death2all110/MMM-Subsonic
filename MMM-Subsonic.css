@@ -1,40 +1,77 @@
-.subsonic-wrapper {
+.subsonic-card {
+  background-color: #16241e; /* Dark green/grey to match your image */
+  border-radius: 16px;
+  padding: 16px;
   display: flex;
-  align-items: center;
-  gap: 15px;
+  flex-direction: column;
+  gap: 16px;
+  width: 260px; /* Adjust overall size here */
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
   text-align: left;
 }
 
-.subsonic-wrapper.nothing-playing {
+.subsonic-card.nothing-playing {
+  background-color: transparent;
+  box-shadow: none;
+  text-align: center;
   justify-content: center;
-  opacity: 0.5;
 }
 
-.subsonic-wrapper .cover-wrapper {
-  flex-shrink: 0;
+/* Header container (Text on left, Heart on right) */
+.subsonic-card .header-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
 }
 
-.subsonic-wrapper .cover-img {
-  width: 80px;
-  height: 80px;
-  border-radius: 8px;
-  object-fit: cover;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.5);
-}
-
-.subsonic-wrapper .details-wrapper {
+/* Text container with the green accent line */
+.subsonic-card .info-wrapper {
   display: flex;
   flex-direction: column;
+  border-left: 3px solid #1db954; /* Green accent */
+  padding-left: 10px;
+}
+
+.subsonic-card .track-title {
+  font-weight: bold;
+  font-size: 20px;
+  line-height: 1.2;
+  color: #ffffff;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 190px;
+}
+
+.subsonic-card .track-artist {
+  color: #a0a0a0;
+  font-size: 14px;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 190px;
+}
+
+.subsonic-card .favorite-icon {
+  color: #ffffff;
+  font-size: 18px;
+  margin-top: 4px;
+}
+
+/* Album Art */
+.subsonic-card .cover-wrapper {
+  width: 100%;
+  display: flex;
   justify-content: center;
 }
 
-.subsonic-wrapper .track-title {
-  font-weight: bold;
-  line-height: 1.2;
-  margin-bottom: 4px;
-}
-
-.subsonic-wrapper .track-artist {
-  color: #bbb;
-  line-height: 1.2;
+.subsonic-card .cover-img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  border-radius: 12px;
+  object-fit: cover;
 }
