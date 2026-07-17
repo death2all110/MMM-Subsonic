@@ -56,12 +56,14 @@ module.exports = NodeHelper.create({
              coverUrl.searchParams.append("size", "300");
              
              track = {
+               id: entry.id,
                title: entry.title,
                artist: entry.artist,
                album: entry.album,
                coverArt: coverUrl.toString(),
                isStarred: !!entry.starred, // Converts the timestamp string to a boolean true/false
-               duration: entry.duration
+               duration: entry.duration,
+               position: entry.position || 0
              };
           }
         }

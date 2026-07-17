@@ -1,22 +1,35 @@
 Module.register("MMM-Subsonic", {
   defaults: {
-    url: "",          // e.g., "http://192.168.1.100:4533"
+    url: "",
     username: "",
     password: "",
-    updateInterval: 10000, // Check every 10 seconds
+    updateInterval: 10000,
     apiVersion: "1.16.1",
   },
 
   start: function() {
     this.trackData = null;
     this.error = null;
-    
-    // Kick off the initial data fetch
+    this.songStartTime = null;
+    this.elapsedSeconds = 0;
+
+    // Fetch data from API every 10 seconds
     this.getData();
-    
     setInterval(() => {
       this.getData();
     }, this.config.updateInterval);
+
+    // Local loop to update the timer every 1 second
+    setInterval(() => {
+      if (this.trackData && this.songStartTime) {
+        this.elapsedSeconds = Math.floor((Date.now() - this.songStartTime) / 1000);
+        // Cap the timer so it doesn't exceed the track duration
+        if (this.elapsedSeconds > this.trackData.duration) {
+            this.elapsedSeconds = this.trackData.duration;
+        }
+        this.updateDom();
+      }
+    }, 1000);
   },
 
   getData: function() {
@@ -28,10 +41,17 @@ Module.register("MMM-Subsonic", {
     }
   },
 
-  socketNotificationReceived: function(notification, payload) {
+  ssocketNotificationReceived: function(notification, payload) {
     if (notification === "NOW_PLAYING_DATA") {
       this.trackData = payload;
       this.error = null;
+      
+      // Sync the local UI timer with the server's reported position.
+      // We push the "songStartTime" backwards in time by the elapsed seconds
+      // so the 1-second interval loop ticks smoothly from the correct spot.
+      this.elapsedSeconds = payload.position || 0;
+      this.songStartTime = Date.now() - (this.elapsedSeconds * 1000);
+
       this.updateDom();
     } else if (notification === "NOW_PLAYING_ERROR") {
       this.error = payload;
@@ -44,9 +64,9 @@ Module.register("MMM-Subsonic", {
   },
 
   formatTime: function(seconds) {
-    if (!seconds) return "";
-    const mins = Math.floor(seconds / 60);
-    const secs = Math.floor(seconds % 60);
+    if (isNaN(seconds)) return "0:00";
+    const mins = Math.floor(Math.abs(seconds) / 60);
+    const secs = Math.floor(Math.abs(seconds) % 60);
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   },
 
@@ -71,7 +91,6 @@ Module.register("MMM-Subsonic", {
     const headerWrapper = document.createElement("div");
     headerWrapper.className = "header-wrapper";
 
-    // Text Info (Green line, Title, Artist)
     const infoWrapper = document.createElement("div");
     infoWrapper.className = "info-wrapper";
 
@@ -87,25 +106,42 @@ Module.register("MMM-Subsonic", {
 
     headerWrapper.appendChild(infoWrapper);
 
-    // Favorites Icon (Heart on the right)
     if (this.trackData.isStarred) {
       const heartIcon = document.createElement("i");
-      heartIcon.className = "fas fa-heart favorite-icon"; 
+      heartIcon.className = "fas fa-heart favorite-icon";
       headerWrapper.appendChild(heartIcon);
     }
 
     wrapper.appendChild(headerWrapper);
 
-    // --- Bottom Section: Cover Art ---
+    // --- Middle Section: Cover Art ---
     const coverWrapper = document.createElement("div");
     coverWrapper.className = "cover-wrapper";
-    
     const coverImg = document.createElement("img");
     coverImg.src = this.trackData.coverArt;
     coverImg.className = "cover-img";
-    
     coverWrapper.appendChild(coverImg);
     wrapper.appendChild(coverWrapper);
+
+   // --- Bottom Section: Timers ---
+    if (this.trackData.duration) {
+      const remainingSeconds = this.trackData.duration - this.elapsedSeconds;
+
+      const timeWrapper = document.createElement("div");
+      timeWrapper.className = "time-wrapper";
+
+      const totalDuration = document.createElement("div");
+      totalDuration.className = "time-text";
+      totalDuration.innerHTML = this.formatTime(this.trackData.duration);
+      timeWrapper.appendChild(totalDuration);
+
+      const timeRemaining = document.createElement("div");
+      timeRemaining.className = "time-text";
+      timeRemaining.innerHTML = `-${this.formatTime(remainingSeconds)}`;
+      timeWrapper.appendChild(timeRemaining);
+
+      wrapper.appendChild(timeWrapper);
+    }
 
     return wrapper;
   }
