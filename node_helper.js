@@ -12,12 +12,33 @@ module.exports = NodeHelper.create({
     }
   },
 
+  // Helper function to manage logging levels cleanly
+  log: function(level, message, detail = "") {
+    const levels = { debug: 0, info: 1, warn: 2, error: 3 };
+    const configLevel = this.configLogLevel || "warn";
+    
+    // Fallback if an unknown string is provided
+    const targetPriority = levels[level] !== undefined ? levels[level] : 2;
+    const currentPriority = levels[configLevel] !== undefined ? levels[configLevel] : 2;
+
+    if (targetPriority >= currentPriority) {
+      const prefix = `[MMM-Navidrome] [${level.toUpperCase()}]`;
+      if (level === "error") {
+        console.error(prefix, message, detail);
+      } else if (level === "warn") {
+        console.warn(prefix, message, detail);
+      } else {
+        console.log(prefix, message, detail);
+      }
+    }
+  },
+
   getNowPlaying: async function(config) {
-    // Generate secure Subsonic token: md5(password + salt)
+    // Cache the log level onto the module instance for the log helper function
+    this.configLogLevel = config.logLevel;
+
     const salt = crypto.randomBytes(6).toString("hex");
     const hash = crypto.createHash("md5").update(config.password + salt).digest("hex");
-    
-    // Clean up URL to prevent double slashes
     const baseUrl = config.url.replace(/\/$/, "");
     
     const url = new URL(`${baseUrl}/rest/getNowPlaying`);
@@ -28,24 +49,28 @@ module.exports = NodeHelper.create({
     url.searchParams.append("c", "MagicMirror");
     url.searchParams.append("f", "json");
 
+    this.log("debug", `Polling API endpoint: ${baseUrl}/rest/getNowPlaying`);
+
     try {
-      // MagicMirror's modern Node environment supports native fetch
       const response = await fetch(url.toString());
+      this.log("debug", `HTTP Status received: ${response.status} ${response.statusText}`);
+      
       if (!response.ok) throw new Error("HTTP error " + response.status);
       
       const data = await response.json();
+      this.log("debug", "Raw Subsonic Response Data:", JSON.stringify(data));
       
       if (data["subsonic-response"] && data["subsonic-response"].status === "ok") {
         const nowPlaying = data["subsonic-response"].nowPlaying;
         let track = null;
         
         if (nowPlaying && nowPlaying.entry) {
-          // Normalize to an array in case multiple clients are actively streaming
           const entries = [].concat(nowPlaying.entry);
           const entry = entries[0]; 
           
           if (entry) {
-             // Construct the cover art URL using the same auth parameters
+             this.log("info", `Active track confirmed: "${entry.title}" by ${entry.artist}`);
+             
              const coverUrl = new URL(`${baseUrl}/rest/getCoverArt`);
              coverUrl.searchParams.append("u", config.username);
              coverUrl.searchParams.append("t", hash);
@@ -61,19 +86,23 @@ module.exports = NodeHelper.create({
                artist: entry.artist,
                album: entry.album,
                coverArt: coverUrl.toString(),
-               isStarred: !!entry.starred, // Converts the timestamp string to a boolean true/false
+               isStarred: !!entry.starred,
                duration: entry.duration,
                position: entry.position || 0
              };
           }
+        } else {
+          this.log("debug", "API connection healthy, but no active streams are reporting data.");
         }
+        
         this.sendSocketNotification("NOW_PLAYING_DATA", track);
       } else {
          const errorMsg = data["subsonic-response"]?.error?.message || "Unknown API Error";
+         this.log("warn", `Subsonic API returned error status: ${errorMsg}`);
          this.sendSocketNotification("NOW_PLAYING_ERROR", errorMsg);
       }
     } catch (error) {
-      console.error("[MMM-Subsonic] Fetch error:", error);
+      this.log("error", "Fetch execution critically failed:", error.message);
       this.sendSocketNotification("NOW_PLAYING_ERROR", error.message);
     }
   }

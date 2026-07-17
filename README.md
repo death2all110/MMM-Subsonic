@@ -41,7 +41,8 @@ To activate the module, add the following block to your `config/config.js` array
     
     // Optional Settings
     updateInterval: 10000,            // How often to poll the API in milliseconds (Default: 10000)
-    apiVersion: "1.16.1"              // Subsonic API version to request (Default: "1.16.1")
+    apiVersion: "1.16.1",              // Subsonic API version to request (Default: "1.16.1")
+    logLevel: "warn"                  // Set log level. Defaults to 'warn'
   }
 }
 ```

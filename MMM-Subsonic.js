@@ -5,6 +5,7 @@ Module.register("MMM-Subsonic", {
     password: "",
     updateInterval: 10000,
     apiVersion: "1.16.1",
+    logLevel: "warn",
   },
 
   start: function() {
