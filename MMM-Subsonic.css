@@ -63,7 +63,6 @@
 .subsonic-card .time-text {
   font-size: 12px;
   color: #a0a0a0;
-  font-family: monospace; /* Keeps the numbers from jittering as they tick */
   min-width: 35px;
 }
 
@@ -72,11 +71,6 @@
   justify-content: space-between;
   width: 100%;
   margin-top: -4px;
-}
-
-.subsonic-card .time-text:last-child {
-  text-align: right;
-  min-width: 45px;
 }
 
 .subsonic-card .favorite-icon {

@@ -88,7 +88,6 @@ module.exports = NodeHelper.create({
                coverArt: coverUrl.toString(),
                isStarred: !!entry.starred,
                duration: entry.duration,
-               position: entry.position || 0
              };
           }
         } else {

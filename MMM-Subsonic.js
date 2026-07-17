@@ -20,17 +20,6 @@ Module.register("MMM-Subsonic", {
       this.getData();
     }, this.config.updateInterval);
 
-    // Local loop to update the timer every 1 second
-    setInterval(() => {
-      if (this.trackData && this.songStartTime) {
-        this.elapsedSeconds = Math.floor((Date.now() - this.songStartTime) / 1000);
-        // Cap the timer so it doesn't exceed the track duration
-        if (this.elapsedSeconds > this.trackData.duration) {
-            this.elapsedSeconds = this.trackData.duration;
-        }
-        this.updateDom();
-      }
-    }, 1000);
   },
 
   getData: function() {
@@ -50,10 +39,6 @@ Module.register("MMM-Subsonic", {
       if (payload) {
         this.trackData = payload;
         this.error = null;
-        
-        // Sync the local UI timer with the server's reported position
-        this.elapsedSeconds = payload.position || 0;
-        this.songStartTime = Date.now() - (this.elapsedSeconds * 1000);
       } else {
         // If payload is null, it means the backend connected successfully but nothing is playing
         this.trackData = null;
@@ -130,22 +115,24 @@ Module.register("MMM-Subsonic", {
     coverWrapper.appendChild(coverImg);
     wrapper.appendChild(coverWrapper);
 
-   // --- Bottom Section: Timers ---
+   // --- Bottom Section: Duration ---
     if (this.trackData.duration) {
-      const remainingSeconds = this.trackData.duration - this.elapsedSeconds;
-
       const timeWrapper = document.createElement("div");
       timeWrapper.className = "time-wrapper";
 
       const totalDuration = document.createElement("div");
       totalDuration.className = "time-text";
-      totalDuration.innerHTML = this.formatTime(this.trackData.duration);
+      
+      // Adds a small, clean clock icon next to the total track length
+      const clockIcon = document.createElement("i");
+      clockIcon.className = "far fa-clock";
+      clockIcon.style.marginRight = "6px";
+      
+      const timeText = document.createTextNode(this.formatTime(this.trackData.duration));
+      
+      totalDuration.appendChild(clockIcon);
+      totalDuration.appendChild(timeText);
       timeWrapper.appendChild(totalDuration);
-
-      const timeRemaining = document.createElement("div");
-      timeRemaining.className = "time-text";
-      timeRemaining.innerHTML = `-${this.formatTime(remainingSeconds)}`;
-      timeWrapper.appendChild(timeRemaining);
 
       wrapper.appendChild(timeWrapper);
     }
