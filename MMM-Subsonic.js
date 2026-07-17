@@ -34,7 +34,7 @@ Module.register("MMM-Subsonic", {
   socketNotificationReceived: function(notification, payload) {
     if (notification === "NOW_PLAYING_DATA") {
       // DEBUG LOG: This will let you expand the raw track data in your browser dev tools
-      console.log("[MMM-Subsonic] Received payload:", payload);
+      console.debug("[MMM-Subsonic] Received payload:", payload);
 
       if (payload) {
         this.trackData = payload;

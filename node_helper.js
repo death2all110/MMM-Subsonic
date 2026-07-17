@@ -34,27 +34,21 @@ module.exports = NodeHelper.create({
   },
 
   getNowPlaying: async function(config) {
-    // Cache the log level onto the module instance for the log helper function
-    this.configLogLevel = config.logLevel;
-
     const salt = crypto.randomBytes(6).toString("hex");
     const hash = crypto.createHash("md5").update(config.password + salt).digest("hex");
     const baseUrl = config.url.replace(/\/$/, "");
     
-    const url = new URL(`${baseUrl}/rest/getNowPlaying`);
-    url.searchParams.append("u", config.username);
-    url.searchParams.append("t", hash);
-    url.searchParams.append("s", salt);
-    url.searchParams.append("v", config.apiVersion);
-    url.searchParams.append("c", "MagicMirror");
-    url.searchParams.append("f", "json");
-
-    this.log("debug", `Polling API endpoint: ${baseUrl}/rest/getNowPlaying`);
+    // 1. Initial poll to see what is actively playing
+    const nowPlayingUrl = new URL(`${baseUrl}/rest/getNowPlaying`);
+    nowPlayingUrl.searchParams.append("u", config.username);
+    nowPlayingUrl.searchParams.append("t", hash);
+    nowPlayingUrl.searchParams.append("s", salt);
+    nowPlayingUrl.searchParams.append("v", config.apiVersion);
+    nowPlayingUrl.searchParams.append("c", "MagicMirror");
+    nowPlayingUrl.searchParams.append("f", "json");
 
     try {
-      const response = await fetch(url.toString());
-      this.log("debug", `HTTP Status received: ${response.status} ${response.statusText}`);
-      
+      const response = await fetch(nowPlayingUrl.toString());
       if (!response.ok) throw new Error("HTTP error " + response.status);
       
       const data = await response.json();
@@ -68,9 +62,34 @@ module.exports = NodeHelper.create({
           const entries = [].concat(nowPlaying.entry);
           const entry = entries[0]; 
           
-          if (entry) {
-             this.log("info", `Active track confirmed: "${entry.title}" by ${entry.artist}`);
+          if (entry && entry.id) {
+             // 2. SECONDARY FETCH: Query ground-truth song details to get live 'starred' status
+             const songUrl = new URL(`${baseUrl}/rest/getSong`);
+             songUrl.searchParams.append("u", config.username);
+             songUrl.searchParams.append("t", hash);
+             songUrl.searchParams.append("s", salt);
+             songUrl.searchParams.append("v", config.apiVersion);
+             songUrl.searchParams.append("c", "MagicMirror");
+             songUrl.searchParams.append("f", "json");
+             songUrl.searchParams.append("id", entry.id); // Query this specific song ID
+
+             let isStarredLive = !!entry.starred; // Fallback to cache
              
+             try {
+               const songResponse = await fetch(songUrl.toString());
+               if (songResponse.ok) {
+                 const songData = await songResponse.json();
+                 const actualSong = songData["subsonic-response"]?.song;
+                 if (actualSong) {
+                   // Pull live starred state directly from the DB record
+                   isStarredLive = !!actualSong.starred; 
+                   this.log("debug", `Live DB Starred Sync for ${entry.title}: ${isStarredLive}`);
+                 }
+               }
+             } catch (e) {
+               this.log("warn", "Failed to pull live starred status via getSong, using cache fallback.");
+             }
+
              const coverUrl = new URL(`${baseUrl}/rest/getCoverArt`);
              coverUrl.searchParams.append("u", config.username);
              coverUrl.searchParams.append("t", hash);
@@ -86,22 +105,20 @@ module.exports = NodeHelper.create({
                artist: entry.artist,
                album: entry.album,
                coverArt: coverUrl.toString(),
-               isStarred: !!entry.starred,
-               duration: entry.duration,
+               isStarred: isStarredLive, // Uses our verified live state
+               duration: entry.duration
              };
           }
-        } else {
-          this.log("debug", "API connection healthy, but no active streams are reporting data.");
         }
         
         this.sendSocketNotification("NOW_PLAYING_DATA", track);
       } else {
          const errorMsg = data["subsonic-response"]?.error?.message || "Unknown API Error";
-         this.log("warn", `Subsonic API returned error status: ${errorMsg}`);
+         this.log("warn", `Subsonic API returned a non-OK status: ${errorMsg}`);
          this.sendSocketNotification("NOW_PLAYING_ERROR", errorMsg);
       }
     } catch (error) {
-      this.log("error", "Fetch execution critically failed:", error.message);
+      this.log("error", "Fetch process critically failed:", error.message);
       this.sendSocketNotification("NOW_PLAYING_ERROR", error.message);
     }
   }
