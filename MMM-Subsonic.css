@@ -60,19 +60,6 @@
   max-width: 190px;
 }
 
-.subsonic-card .time-text {
-  font-size: 12px;
-  color: #a0a0a0;
-  min-width: 35px;
-}
-
-.subsonic-card .time-wrapper {
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-  margin-top: -4px;
-}
-
 .subsonic-card .favorite-icon {
   color: #ffffff;
   font-size: 18px;
@@ -94,9 +81,35 @@
   object-fit: cover;
 }
 
-.subsonic-card .time-wrapper {
+.subsonic-card .user-wrapper {
   display: flex;
   justify-content: space-between;
   width: 100%;
   margin-top: -4px;
+}
+
+.subsonic-card .footer-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-top: -4px;
+}
+
+.subsonic-card .time-text,
+.subsonic-card .client-wrapper {
+  font-size: 12px;
+  color: #a0a0a0;
+  font-family: monospace;
+  display: flex;
+  align-items: center;
+}
+
+.subsonic-card .client-separator {
+  margin: 0 5px;
+  opacity: 0.6;
+}
+
+.subsonic-card .player-text {
+  color: #808080; /* Slightly darker to give a subtle hierarchy */
 }

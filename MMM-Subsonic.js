@@ -115,26 +115,64 @@ Module.register("MMM-Subsonic", {
     coverWrapper.appendChild(coverImg);
     wrapper.appendChild(coverWrapper);
 
-   // --- Bottom Section: Duration ---
-    if (this.trackData.duration) {
-      const timeWrapper = document.createElement("div");
-      timeWrapper.className = "time-wrapper";
+   // --- Bottom Section: Footer (Duration, User, & Player) ---
+    if (this.trackData.duration || this.trackData.user || this.trackData.playerName) {
+      const footerWrapper = document.createElement("div");
+      footerWrapper.className = "footer-wrapper";
 
-      const totalDuration = document.createElement("div");
-      totalDuration.className = "time-text";
-      
-      // Adds a small, clean clock icon next to the total track length
-      const clockIcon = document.createElement("i");
-      clockIcon.className = "far fa-clock";
-      clockIcon.style.marginRight = "6px";
-      
-      const timeText = document.createTextNode(this.formatTime(this.trackData.duration));
-      
-      totalDuration.appendChild(clockIcon);
-      totalDuration.appendChild(timeText);
-      timeWrapper.appendChild(totalDuration);
+      // Left side: Duration
+      if (this.trackData.duration) {
+        const totalDuration = document.createElement("div");
+        totalDuration.className = "time-text";
 
-      wrapper.appendChild(timeWrapper);
+        const clockIcon = document.createElement("i");
+        clockIcon.className = "far fa-clock";
+        clockIcon.style.marginRight = "6px";
+
+        const timeText = document.createTextNode(this.formatTime(this.trackData.duration));
+
+        totalDuration.appendChild(clockIcon);
+        totalDuration.appendChild(timeText);
+        footerWrapper.appendChild(totalDuration);
+      }
+
+      // Right side container: User + Player Name
+      if (this.trackData.user || this.trackData.playerName) {
+        const clientWrapper = document.createElement("div");
+        clientWrapper.className = "client-wrapper";
+
+        if (this.trackData.user) {
+          const userText = document.createElement("span");
+          userText.className = "user-text";
+
+          const userIcon = document.createElement("i");
+          userIcon.className = "fas fa-user";
+          userIcon.style.marginRight = "5px";
+
+          userText.appendChild(userIcon);
+          userText.appendChild(document.createTextNode(this.trackData.user));
+          clientWrapper.appendChild(userText);
+        }
+
+        // Add player name (with a separator dot if user is also present)
+        if (this.trackData.playerName) {
+          if (this.trackData.user) {
+            const separator = document.createElement("span");
+            separator.className = "client-separator";
+            separator.innerHTML = "•";
+            clientWrapper.appendChild(separator);
+          }
+
+          const playerText = document.createElement("span");
+          playerText.className = "player-text";
+          playerText.appendChild(document.createTextNode(this.trackData.playerName));
+          clientWrapper.appendChild(playerText);
+        }
+
+        footerWrapper.appendChild(clientWrapper);
+      }
+
+      wrapper.appendChild(footerWrapper);
     }
 
     return wrapper;

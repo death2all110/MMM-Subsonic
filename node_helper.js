@@ -106,7 +106,9 @@ module.exports = NodeHelper.create({
                album: entry.album,
                coverArt: coverUrl.toString(),
                isStarred: isStarredLive, // Uses our verified live state
-               duration: entry.duration
+               duration: entry.duration,
+               user: entry.username || null,
+               playerName: entry.playerName || null
              };
           }
         }
